@@ -19,7 +19,7 @@ export const portfolioData: Record<string, PortfolioBeat> = {
   hero: {
     id: "hero",
     title: "Calvin Fisher",
-    subtitle: "Junior | B.E. Computer Engineering | Hardware & Software",
+    subtitle: "Junior | B.S. Computer Engineering | Hardware & Software",
     cards: []
   },
 

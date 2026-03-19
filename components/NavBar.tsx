@@ -9,13 +9,15 @@ const navLinks = [
   { label: "About",      href: "#about" },
   { label: "Experience", href: "#experience" },
   { label: "Projects",   href: "#projects" },
+  { label: "Animation",  href: "#hardware" },
   { label: "Resume",     href: "#docs" },
   { label: "Life",       href: "#life" },
   { label: "Contact",    href: "#contact" },
 ];
 
 // Offset to account for the fixed nav bar height
-const NAV_OFFSET = 72;
+// Extra padding below nav so section headings land with comfortable breathing room
+const NAV_OFFSET = 100;
 
 export default function NavBar() {
   const [scrolled, setScrolled] = useState(false);

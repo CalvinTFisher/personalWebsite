@@ -42,3 +42,9 @@ headshot.png
 public/resume.pdf
 public/transcript.pdf
 public/headshot.png
+
+# These public-safe resumes ARE committed intentionally:
+!public/sweResumePublic.pdf
+!public/eeResumePublic.pdf
+!sweResumePublic.pdf
+!eeResumePublic.pdf
