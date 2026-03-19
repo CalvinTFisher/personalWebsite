@@ -30,6 +30,13 @@
     background-color: rgba(99, 102, 241, 0.25);
     color: white;
   }
+
+  /* Offset scroll targets to account for the fixed nav bar.
+     scroll-margin-top is the clean, native CSS approach. */
+  section[id],
+  div[id] {
+    scroll-margin-top: 80px;
+  }
 }
 
 @keyframes blob {

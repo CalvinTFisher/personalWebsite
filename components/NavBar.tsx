@@ -16,8 +16,7 @@ const navLinks = [
 ];
 
 // Offset to account for the fixed nav bar height
-// Extra padding below nav so section headings land with comfortable breathing room
-const NAV_OFFSET = 100;
+// Scroll offset is handled via scroll-margin-top in globals.css
 
 export default function NavBar() {
   const [scrolled, setScrolled] = useState(false);
@@ -34,8 +33,7 @@ export default function NavBar() {
       const id = href.replace("#", "");
       const el = document.getElementById(id);
       if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
-        window.scrollTo({ top, behavior: "smooth" });
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     },
     []
