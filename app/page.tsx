@@ -66,12 +66,40 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          2. ABOUT — White
+          2. HARDWARE SHOWCASE — Dark scroll animation (right after hero)
+      ════════════════════════════════════════════════════ */}
+      <div id="hardware" className="relative z-10 w-full bg-black" style={{ overflow: 'clip' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-50 select-none mix-blend-screen overflow-hidden">
+          <div className="absolute top-[10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-700/30 blur-[150px]" />
+          <div className="absolute top-[40%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-700/20 blur-[130px]" />
+          <div className="absolute bottom-[10%] left-[10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/40 blur-[180px]" />
+        </div>
+        <ScrollPcPortfolio>
+          <div className="absolute w-full" style={{ top: '0vh' }}>
+            <SectionOverlay beat={portfolioData.gpu}     align="left" />
+          </div>
+          <div className="absolute w-full" style={{ top: '130vh' }}>
+            <SectionOverlay beat={portfolioData.cpu}     align="right" />
+          </div>
+          <div className="absolute w-full" style={{ top: '260vh' }}>
+            <SectionOverlay beat={portfolioData.ram}     align="left" />
+          </div>
+          <div className="absolute w-full" style={{ top: '390vh' }}>
+            <SectionOverlay beat={portfolioData.storage} align="right" />
+          </div>
+          <div className="absolute w-full" style={{ top: '480vh' }}>
+            <SectionOverlay beat={portfolioData.code}    align="left" />
+          </div>
+        </ScrollPcPortfolio>
+      </div>
+
+      {/* ════════════════════════════════════════════════════
+          3. ABOUT — White
       ════════════════════════════════════════════════════ */}
       <AboutSection />
 
       {/* ════════════════════════════════════════════════════
-          3. EXPERIENCE — Light zinc (recruiter priority #1)
+          4. EXPERIENCE — Light zinc (recruiter priority #1)
       ════════════════════════════════════════════════════ */}
       <section id="experience" className="bg-zinc-50 py-28 md:py-36 relative border-t border-zinc-100 overflow-hidden">
         <div className="absolute top-0 right-0 w-[35vw] h-[35vw] rounded-full bg-blue-50/80 blur-[120px] pointer-events-none" />
@@ -110,7 +138,7 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          4. PROJECTS — White (recruiter priority #2)
+          5. PROJECTS — White (recruiter priority #2)
       ════════════════════════════════════════════════════ */}
       <section id="projects" className="bg-white py-28 md:py-36 relative border-t border-zinc-100 overflow-hidden">
         <div className="absolute bottom-0 left-0 w-[35vw] h-[35vw] rounded-full bg-purple-50/60 blur-[120px] pointer-events-none" />
@@ -147,26 +175,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ════════════════════════════════════════════════════
-          5. HARDWARE SHOWCASE — Dark scroll animation
-      ════════════════════════════════════════════════════ */}
-      <div id="hardware" className="relative z-10 w-full bg-black">
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-50 select-none mix-blend-screen overflow-hidden">
-          <div className="absolute top-[10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-700/30 blur-[150px]" />
-          <div className="absolute top-[40%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-700/20 blur-[130px]" />
-          <div className="absolute bottom-[10%] left-[10%] w-[60vw] h-[60vw] rounded-full bg-blue-900/40 blur-[180px]" />
-        </div>
-        <ScrollPcPortfolio frameCount={192}>
-          <div className="absolute inset-0 flex flex-col justify-around py-[15vh]">
-            <SectionOverlay beat={portfolioData.gpu}     align="left" />
-            <SectionOverlay beat={portfolioData.cpu}     align="right" />
-            <SectionOverlay beat={portfolioData.ram}     align="left" />
-            <SectionOverlay beat={portfolioData.storage} align="right" />
-            <SectionOverlay beat={portfolioData.code}    align="left" />
-          </div>
-        </ScrollPcPortfolio>
-      </div>
 
       {/* ════════════════════════════════════════════════════
           6. RESUME — Light grey

@@ -17,7 +17,7 @@ export default function SectionOverlay({ beat, align = "left", anchorId }: Secti
     "justify-center text-center";
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-center px-6 md:px-12 py-24 pointer-events-none relative">
+    <div className="w-full flex flex-col justify-center px-6 md:px-12 py-12 pointer-events-none relative">
       {/* Invisible anchor positioned at the top of the section content */}
       {anchorId && (
         <div
@@ -33,7 +33,7 @@ export default function SectionOverlay({ beat, align = "left", anchorId }: Secti
           <motion.div
             initial={{ opacity: 0, x: align === "right" ? 50 : align === "left" ? -50 : 0, y: align === "center" ? 50 : 0 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: true, margin: "-20%" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="mb-12"
           >

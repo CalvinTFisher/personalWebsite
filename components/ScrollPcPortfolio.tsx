@@ -3,62 +3,65 @@
 import { useRef, useState, useEffect } from "react";
 import { useScroll, useTransform, useSpring } from "framer-motion";
 
+const FRAME_COUNT = 192;
+
 type ScrollPcPortfolioProps = {
-  frameCount: number;
   children?: React.ReactNode;
 };
 
-export default function ScrollPcPortfolio({ frameCount, children }: ScrollPcPortfolioProps) {
+export default function ScrollPcPortfolio({ children }: ScrollPcPortfolioProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<HTMLImageElement[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [progressVal, setProgressVal] = useState(0);
 
-  // Load exactly frameCount images mapping to public/sequence/frame_X.webp
+  // Pre-load all frames into memory so scrubbing is instant
   useEffect(() => {
     let loadedCount = 0;
-    const loadedImages: HTMLImageElement[] = [];
+    const loadedImages: HTMLImageElement[] = new Array(FRAME_COUNT);
 
-    const loadImages = async () => {
-      for (let i = 0; i < frameCount; i++) {
-        const img = new Image();
-        img.src = `/sequence/frame_${i}.webp`;
-        img.onload = () => {
-          loadedCount++;
-          setProgressVal(Math.round((loadedCount / frameCount) * 100));
-          if (loadedCount === frameCount) {
-            setImages(loadedImages);
-            setLoaded(true);
-          }
-        };
-        img.onerror = () => {
-          console.error(`Failed to load frame ${i}`);
-          loadedCount++;
-          if (loadedCount === frameCount) {
-            setImages(loadedImages);
-            setLoaded(true);
-          }
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      // Frames are 1-indexed: frame_1.jpg … frame_192.jpg
+      img.src = `/sequence/frame_${i + 1}.jpg`;
+
+      const index = i; // capture for closure
+      img.onload = () => {
+        loadedImages[index] = img;
+        loadedCount++;
+        setProgressVal(Math.round((loadedCount / FRAME_COUNT) * 100));
+        if (loadedCount === FRAME_COUNT) {
+          setImages([...loadedImages]);
+          setLoaded(true);
         }
-        loadedImages.push(img);
-      }
-    };
-    loadImages();
-  }, [frameCount]);
+      };
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === FRAME_COUNT) {
+          setImages([...loadedImages]);
+          setLoaded(true);
+        }
+      };
+    }
+  }, []);
 
+  // Track scroll progress through the tall container
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end end"]
+    offset: ["start start", "end end"],
   });
 
+  // Gentle smoothing — keeps it feeling attached without input lag
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
+    stiffness: 120,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
 
-  const frameIndex = useTransform(smoothProgress, [0, 1], [0, frameCount - 1]);
+  const frameIndex = useTransform(smoothProgress, [0, 1], [0, FRAME_COUNT - 1]);
 
+  // Render the correct frame to the canvas on every scroll tick
   useEffect(() => {
     if (!loaded || images.length === 0 || !canvasRef.current) return;
 
@@ -67,71 +70,61 @@ export default function ScrollPcPortfolio({ frameCount, children }: ScrollPcPort
     if (!ctx) return;
 
     const render = (val: number) => {
-      const idx = Math.min(
-        frameCount - 1,
-        Math.max(0, Math.round(val))
-      );
+      const idx = Math.min(FRAME_COUNT - 1, Math.max(0, Math.round(val)));
       const img = images[idx];
+      if (!img || !img.complete || img.naturalHeight === 0) return;
 
-      if (img && img.complete && img.naturalHeight !== 0) {
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Calculate aspect ratio keeping the canvas contained at ~60% size for maximum sharpness
-        const canvasRatio = canvas.width / canvas.height;
-        const imgRatio = img.width / img.height;
-        let drawWidth, drawHeight;
-        
-        // Use a scale factor to shrink the image (e.g., 0.6 = 60% of the screen)
-        const scaleFactor = 0.65; 
+      // object-contain: letterbox to fill canvas without cropping
+      const canvasRatio = canvas.width / canvas.height;
+      const imgRatio = img.naturalWidth / img.naturalHeight;
 
-        if (imgRatio > canvasRatio) {
-          // Fit by width
-          drawWidth = canvas.width * scaleFactor;
-          drawHeight = drawWidth / imgRatio;
-        } else {
-          // Fit by height
-          drawHeight = canvas.height * scaleFactor;
-          drawWidth = drawHeight * imgRatio;
-        }
-
-        // Center on the canvas
-        const drawX = (canvas.width - drawWidth) / 2;
-        const drawY = (canvas.height - drawHeight) / 2;
-
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      let drawWidth: number, drawHeight: number;
+      if (imgRatio > canvasRatio) {
+        // Constrained by width
+        drawWidth = canvas.width;
+        drawHeight = drawWidth / imgRatio;
+      } else {
+        // Constrained by height
+        drawHeight = canvas.height;
+        drawWidth = drawHeight * imgRatio;
       }
+
+      const drawX = (canvas.width - drawWidth) / 2;
+      const drawY = (canvas.height - drawHeight) / 2;
+
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
     };
 
     render(frameIndex.get());
+    const unsub = frameIndex.on("change", (val) => render(val));
+    return () => unsub();
+  }, [loaded, images, frameIndex]);
 
-    const unsubscribe = frameIndex.on("change", (latest) => {
-      render(latest);
-    });
-
-    return () => unsubscribe();
-  }, [loaded, images, frameIndex, frameCount]);
-
+  // Keep canvas pixel dimensions in sync with the viewport
   useEffect(() => {
-    const handleResize = () => {
-      if (canvasRef.current) {
-        canvasRef.current.width = window.innerWidth;
-        canvasRef.current.height = window.innerHeight;
-      }
+    const sync = () => {
+      if (!canvasRef.current) return;
+      canvasRef.current.width = window.innerWidth;
+      canvasRef.current.height = window.innerHeight;
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full text-white" style={{ height: "1400vh" }}>
-      {/* Loading Overlay */}
+    <div ref={containerRef} className="relative w-full text-white" style={{ height: "700vh" }}>
+
+      {/* Loading overlay — shown until all 192 frames are decoded in RAM */}
       {!loaded && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black text-white/90">
-          <div className="mb-4 text-xl font-light tracking-widest text-[#d1d5db] uppercase">Initializing Hardware</div>
+          <div className="mb-4 text-xl font-light tracking-widest text-[#d1d5db] uppercase">
+            Initializing Hardware
+          </div>
           <div className="w-64 h-1 bg-white/10 rounded overflow-hidden">
-            <div 
+            <div
               className="h-full bg-white/80 transition-all duration-300"
               style={{ width: `${progressVal}%` }}
             />
@@ -139,16 +132,15 @@ export default function ScrollPcPortfolio({ frameCount, children }: ScrollPcPort
         </div>
       )}
 
-      {/* Sticky Canvas Container */}
+      {/* Sticky full-screen canvas */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center pointer-events-none -z-10">
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black to-transparent z-10" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent z-10" />
-        
-        <canvas ref={canvasRef} className="object-cover w-full h-full opacity-60" />
+        <canvas ref={canvasRef} className="w-full h-full opacity-60" />
       </div>
-      
-      {/* Scrolling Content over the sticky canvas (scaled up slightly since container is 600vh) */}
-      <div className="relative z-10 w-full h-[1400vh]">
+
+      {/* Overlaid scrolling content */}
+      <div className="relative z-10 w-full h-[700vh] overflow-hidden">
         {children}
       </div>
     </div>
